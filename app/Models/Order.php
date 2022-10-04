@@ -7,10 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    use HasFactory;
+    use HasFactory, softDeletes;
 
     protected $fillable = [
         'name',
         'total'
     ];
+
+    public function orderItem(){
+        return $this->belongsTo(OrderItem::class);
+    }
 }
