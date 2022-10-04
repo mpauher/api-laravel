@@ -22,6 +22,7 @@ class CreateProductsTable extends Migration
             $table->string('description')->max(255)->nullable();
             $table->boolean('featured')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

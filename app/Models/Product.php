@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, softDeletes;
 
     protected $fillable = [
         'serial',
@@ -17,4 +17,8 @@ class Product extends Model
         'description',
         'featured'
     ];
+
+    public function orderItem(){
+        return $this->belongsTo(OrderItem::class);
+    }
 }

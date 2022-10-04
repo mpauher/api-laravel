@@ -77,8 +77,10 @@ class ProductController extends Controller
             ]);
 
             return response()->json($product);
-        } catch(\Exception $e){
-            return response()->json($e->getMessage());
+        }catch ( \Exception $e){
+            return response()->json([
+                'error' => $e->getMessage()
+            ],400);
         }
 
     }
@@ -98,11 +100,11 @@ class ProductController extends Controller
             return response()->json([
                 'message' => 'Product update succesfully',
             ],200);
+        }catch ( \Exception $e){
+            return response()->json([
+                'error' => $e->getMessage()
+            ],400);
         }
-        catch(\Exception $e){
-            return response()->json($e->getMessage());
-        }
-
     }
 
     public function destroy($id){
