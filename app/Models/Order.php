@@ -14,7 +14,7 @@ class Order extends Model
         'total'
     ];
 
-    public function orderItem(){
-        return $this->belongsTo(OrderItem::class);
+    public function user(){
+        return $this->belongsTo(User::class);
     }
 }
