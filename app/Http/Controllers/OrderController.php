@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 
 class OrderController extends Controller
@@ -12,7 +17,9 @@ class OrderController extends Controller
         try{
             $orders = Order::all();
             if(count($orders) == 0) {
-                return response()->json();
+                return response()->json([
+                    'message' => 'Order not found'
+                ]);
             }
             return response()->json([
                 'orders' => $orders,          
@@ -42,23 +49,62 @@ class OrderController extends Controller
 
     public function create(Request $request){
         try{
-            $request->validate([
-            'name'=>'required|string',
-            'total'=>'required|numeric',     
-            ]);
 
-            $order = Order::create([
-            'name'=>$request->name,
-            'total'=>$request->total,
-            ]);
 
+            return DB::transaction(function () use ($request) {
+                $reference = Str::random(10).'_'.Carbon::now();
+                $request->validate([
+                    'user_id' => 'required|integer',
+                    'items' => 'required|array'
+                ]);   
+    
+                $order = Order::create([
+                    'reference'=>$reference,
+                    'user_id'=>$request->user_id,
+                ]);
+    
+                $subtotal = 0;
+                $total = 0;
+    
+                foreach($request->items as $item){
+                    $product = Product::find($item['product_id']);
+                    
+                    if($item['quantity']<= $product->quantity){
+                        // $price = Product::find($item['product_id'])->price;
+                        $orderItem = OrderItem::create([
+                            'order_id' => $order->id,
+                            'product_id' => $item['product_id'],
+                            'quantity' => $item['quantity'],
+                            'price' => $product->price
+                        ]);
+
+                        $product->update([
+                            'quantity' => $product->quantity - $item['quantity']
+                        ]);
+                        $subtotal = $subtotal + ($product->price * $orderItem->quantity);
+                    } else{
+                        return response()->json([
+                            'error'=>'Product quantity not enough',
+                        ],404);
+                    }
+                }
+    
+                $total = $total + ($subtotal * 1.19);
+                $order->total = $total;
+                $order->subtotal = $subtotal;
+                $order->save();
+                return response()->json([
+                    'message'=>'ok'
+                ], 201);
+            }, 5);
+
+
+            
+
+        } catch (\Exception $e) {
             return response()->json([
-                'message'=>'Carlos es el mejor profe del mundo '
-            ]);
-        }catch ( \Exception $e){
-            return response()->json([
-                'error' => $e->getMessage()
-            ],400);
+                'message' => $e->getMessage()
+            ], 400);
         }
     }
 
