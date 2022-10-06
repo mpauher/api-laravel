@@ -49,8 +49,6 @@ class OrderController extends Controller
 
     public function create(Request $request){
         try{
-
-
             return DB::transaction(function () use ($request) {
                 $reference = Str::random(10).'_'.Carbon::now();
                 $request->validate([
@@ -83,6 +81,7 @@ class OrderController extends Controller
                         ]);
                         $subtotal = $subtotal + ($product->price * $orderItem->quantity);
                     } else{
+                        DB::rollBack();
                         return response()->json([
                             'error'=>'Product quantity not enough',
                         ],404);
@@ -97,9 +96,6 @@ class OrderController extends Controller
                     'message'=>'ok'
                 ], 201);
             }, 5);
-
-
-            
 
         } catch (\Exception $e) {
             return response()->json([
